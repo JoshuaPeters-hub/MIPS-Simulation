@@ -28,7 +28,7 @@ class RF
       Registers.resize(32);  
       Registers[0] = bitset<32> (0);  
     }
-
+    
     void ReadWrite(bitset<5> RdReg1, bitset<5> RdReg2, bitset<5> WrtReg, bitset<32> WrtData, bitset<1> WrtEnable)
     {   
       /**
