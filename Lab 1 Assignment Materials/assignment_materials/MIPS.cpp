@@ -28,7 +28,7 @@ class RF
       Registers.resize(32);  
       Registers[0] = bitset<32> (0);  
     }
-    
+
     void ReadWrite(bitset<5> RdReg1, bitset<5> RdReg2, bitset<5> WrtReg, bitset<32> WrtData, bitset<1> WrtEnable)
     {   
       /**
@@ -37,7 +37,13 @@ class RF
        * This function is used to read or write data from/to the register, depending on the value of WrtEnable.
        * Put the read results to the ReadData1 and ReadData2.
        */
-      // TODO: implement!               
+      // TODO: implement!
+      ReadData1 = Registers[RdReg1.to_ulong()];
+      ReadData2 = Registers[RdReg2.to_ulong()];
+
+      if (WrtEnable[0]) {
+        Registers[WrtReg.to_ulong()] = WrtData;
+      }
     }
 
     void OutputRF()
@@ -74,6 +80,23 @@ class ALU
        * ALU operation depends on the ALUOP, which are definded as ADDU, SUBU, etc. 
        */
       // TODO: implement!
+      unsigned int ans;
+
+      if (ALUOP==ADDU){
+        ans=oprand1.to_ulong()+oprand2.to_ulong();
+      }
+      else if(ALUOP==SUBU){
+        ans=oprand1.to_ulong()-oprand2.to_ulong();
+      }
+      else if (ALUOP==AND){
+        ans=oprand1.to_ulong()&oprand2.to_ulong();
+      }
+      else if(ALUOP==OR){
+        ans=oprand1.to_ulong()|oprand2.to_ulong();
+      }
+      else if (ALUOP==NOR){
+        ans=~(oprand1.to_ulong()|oprand2.to_ulong());
+      }
       return ALUresult;
     }            
 };
@@ -112,7 +135,30 @@ class INSMem
        * Read the byte at the ReadAddress and the following three byte,
        * and return the read result. 
        */
-      return Instruction;     
+      // Read address is the Memory address, which when converted to decimal, is an index to the IMem vector.
+      // address variable is used to store the integer value of ReadAddress, which is then used to index the IMem vector.
+      unsigned int address = ReadAddress.to_ulong();
+
+      // byte1, byte2, byte3, and byte4 are used to store the four bytes read from the IMem vector.
+      unsigned long byte1, byte2, byte3, byte4;
+
+      // The four bytes from the Imem vector are indexed and stored in the appropriate byte variable.
+      // The first is the address itself and the remaining 3 are the next three consecutive addresses.
+      byte1 = IMem[address].to_ulong();
+      byte2 = IMem[address + 1].to_ulong();
+      byte3 = IMem[address + 2].to_ulong();
+      byte4 = IMem[address + 3].to_ulong();
+
+      // The four byte variables are combined into one one 32-bit instruction variable.
+      unsigned long bits = (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
+
+      // the bitsvariable is converted to a bitset of 32 bits and assigned to the Instruction variable.
+      Instruction = bitset<32>(bits);
+
+      // returns instruction variable
+      std::cout << "Instruction: " << Instruction << std::endl;
+
+      return Instruction;
     }     
 
   private:
@@ -154,7 +200,59 @@ class DataMem
        * If readmem enabled, return the DMem read result as readdata.
        */
       // TODO: implement!
-      return readdata;     
+      // Address is the Data address, which when converted to integer, is an
+      // index to the Dmem vector.
+      // MemAddress variable is used to store the integer value of Address,
+      // which is then used to index the Dmem vector.
+      unsigned int MemAddress = Address.to_ulong();
+
+      // check if writemem is enabled, if it's enabled, write data to Dmem
+      if (writemem.to_ulong() == 1) {
+        // convert WriteData to an unsinged long number and store in variable
+        unsigned long WriteValue = WriteData.to_ulong();
+
+        // byte1, byte2, byte3, and byte4 are used to store the four bytes
+        // gotten from the WriteData.
+        unsigned long byte1, byte2, byte3, byte4;
+
+        // shift the writeValue so only the appropriate 8-bit value (byte) is
+        // left
+        byte1 = (WriteValue >> 24) & 0xFF;
+        byte2 = (WriteValue >> 16) & 0xFF;
+        byte3 = (WriteValue >> 8) & 0xFF;
+        byte4 = WriteValue & 0xFF;
+
+        // Write to Dmem
+        DMem[MemAddress] = bitset<8>(byte1);
+        DMem[MemAddress + 1] = bitset<8>(byte2);
+        DMem[MemAddress + 2] = bitset<8>(byte3);
+        DMem[MemAddress + 3] = bitset<8>(byte4);
+      }
+
+      // check if readmem is enabled, if it's enabled, read data from Dmem and
+      // store in readdata
+      if (readmem.to_ulong() == 1) {
+        // byte1, byte2, byte3, and byte4 are used to store the four bytes read
+        // from the DMem vector.
+        unsigned long byte1, byte2, byte3, byte4;
+
+        // The four bytes from the DMem vector are indexed and stored in the
+        // appropriate byte variable. The first is the Memory address itself and
+        // the remaining 3 are the next three consecutive addresses.
+        byte1 = DMem[MemAddress].to_ulong();
+        byte2 = DMem[MemAddress + 1].to_ulong();
+        byte3 = DMem[MemAddress + 2].to_ulong();
+        byte4 = DMem[MemAddress + 3].to_ulong();
+
+        // The four byte variables are combined into one one 32-bit data value.
+        unsigned long bits = (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
+
+        // the bits variable is converted to a bitset of 32 bits and assigned to
+        // the readdata variable.
+        readdata = bitset<32>(bits);
+      }
+
+      return readdata;
     }   
 
     void OutputDataMem()
