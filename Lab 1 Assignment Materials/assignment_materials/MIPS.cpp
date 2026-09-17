@@ -369,17 +369,16 @@ int main()
         string immediateString = immediate.to_string();
 
         // check if MSB of immediate is 0 or 1
-        if (immediateString[0] = 0) {
+        if (immediateString[0] == 0) {
           // add 16 0s before the immediate
           immediateString = "0000000000000000" + immediateString;
 
         } else {
           // add 16 1s before the immediate
           immediateString = "1111111111111111" + immediateString;
-
         }
 
-        bitset signExtendedImmediate = bitset<32> (immediateString);
+        bitset<32> signExtendedImmediate = bitset<32>(immediateString);
 
         // decode instruction
         myRF.ReadWrite(rs, rt, bitset<5>(0), bitset<32>(0), bitset<1>(0));
