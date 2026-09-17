@@ -365,25 +365,86 @@ int main()
       rt = bitset<5> (Instruction.to_string().substr(11, 5));
       immediate = bitset<16> (Instruction.to_string().substr(16, 16));
 
-      if (opCode == 0x09) {
+      // Extend the immediate
+        string immediateString = immediate.to_string();
+
+        // check if MSB of immediate is 0 or 1
+        if (immediateString[0] = 0) {
+          // add 16 0s before the immediate
+          immediateString = "0000000000000000" + immediateString;
+
+        } else {
+          // add 16 1s before the immediate
+          immediateString = "1111111111111111" + immediateString;
+
+        }
+
+        bitset signExtendedImmediate = bitset<32> (immediateString);
+
         // decode instruction
         myRF.ReadWrite(rs, rt, bitset<5>(0), bitset<32>(0), bitset<1>(0));
 
+      if (opCode == 0x09) { // addiu
         // Set ALUOP
         ALUOP = bitset<3> ("000");
 
-        // Extend the immediate
+        // Execute: after decoding, ALU may run and return result
+        ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, signExtendedImmediate);
 
+        // Write back to RF: some operations may write things to RF
+        myRF.ReadWrite(rs, rt, rt, ALUReturnValue, bitset<1>(1));
+
+        // Update PC
+        PC = bitset<32>(PC.to_ulong() + 4); 
+
+      } else if (opCode == 0x04) { // beq
+
+        // Set ALUOP
+        ALUOP = bitset<3> ("001");
+
+         // Execute: after decoding, ALU may run and return result
+        ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, myRF.ReadData2);
+
+        // Check if ALUReturnValue is equal to 0, indicating rt and rs are equal
+        if (ALUReturnValue == bitset<32>(0)) {
+          // branch by updating PC
+          PC = bitset<32>(PC.to_ulong() + 4 + (signExtendedImmediate << 2).to_ulong()); // update this, not correct
+
+        } else {
+          // Update PC
+          PC = bitset<32>(PC.to_ulong() + 4);
+
+        }
+      } else if (opCode == 0x23) { // lw instruction
+
+        // Set ALUOP
+        ALUOP = bitset<3> ("000"); // ADDU
 
         // Execute: after decoding, ALU may run and return result
-        ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, immediate)
+        ALUReturnValue = myALU.ALUOperation(ALUOP, signExtendedImmediate, myRF.ReadData1);
+
+        // Read/Write Mem: access data memory (myDataMem)
+        bitset<32> dataMemValue = myDataMem.MemoryAccess(ALUReturnValue, bitset<32>(0), bitset<1>(1), bitset<1>(0));
+
+        // Write back to RF: some operations may write things to RF
+        myRF.ReadWrite(rs, rt, rt, dataMemValue, bitset<1>(1));
+
+        // Update PC
+        PC = bitset<32>(PC.to_ulong() + 4);
+      } else if (opCode == 0x2B) { // sw instruction
+
+        // Set ALUOP
+        ALUOP = bitset<3> ("000"); // ADDU
+
+        // Execute: after decoding, ALU may run and return result
+        ALUReturnValue = myALU.ALUOperation(ALUOP, signExtendedImmediate, myRF.ReadData1);
+
+        // Read/Write Mem: access data memory (myDataMem)
+        myDataMem.MemoryAccess(ALUReturnValue, myRF.ReadData2, bitset<1>(0), bitset<1>(1));
+
+        // Update PC
+        PC = bitset<32>(PC.to_ulong() + 4);
       }
-
-     
-
-
-
-
     }
 
     // Execute: after decoding, ALU may run and return result
