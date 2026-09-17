@@ -312,7 +312,7 @@ int main()
     bitset<32> ALUReturnValue;
 
     // checks if opcode is R-type and get all signals
-    if (opCode == 0x00) {
+    if (opCode == 0x00) { // R-type instructions
 
       // get values for other signals
       rs = bitset<5> (Instruction.to_string().substr(6, 5));
@@ -445,18 +445,15 @@ int main()
         // Update PC
         PC = bitset<32>(PC.to_ulong() + 4);
       }
+    } else if (opCode == 0x02) {  // J-type J instruction
+      address = bitset<26>(Instruction.to_string().substr(6, 26));
+      bitset<32> pc = ((PC.to_ulong() + 4) && 0xF0000000) +
+                      (Instruction.to_ulong() & 0x3FFFFFF << 2);
+    } else if (opCode == 0x3F || opCode == 0xFFFFFFFF) {  // J-type halt instruction
+      cout << "halt" << endl;
+      break;
     }
-    
-else if (opCode==0x02){  //jump
-        address= bitset<26>(Instruction.tostring().substr(6,26));
-        pc=((PC.toulong()+4)&&0xF0000000)+(instructions.to_ulong()&0x3FFFFFF<<2);
-        }
-else if (opCode==0x3F||opCode==0xFFFFFFFF){ //halt
-  cout <<"halt"<<endl;
 
-  break;
-}
-    }
     // Execute: after decoding, ALU may run and return result
 
     // Read/Write Mem: access data memory (myDataMem)
