@@ -329,23 +329,23 @@ int main()
       // check for specific instruction
       if (funct == 0x21) {
         // set the ALUOP value to ADDU
-        ALUOP = bitset<3> ("000");
+        ALUOP = bitset<3> (ADDU);
 
       } else if (funct == 0x23) {
         // set the ALUOP value to SUBU
-        ALUOP = bitset<3> ("001");
+        ALUOP = bitset<3> (SUBU);
 
       } else if (funct == 0x24) {
         // set the ALUOP value to AND
-        ALUOP = bitset<3> ("010");
+        ALUOP = bitset<3> (AND);
 
       } else if (funct == 0x25) {
         // set the ALUOP value to OR
-        ALUOP = bitset<3> ("011");
+        ALUOP = bitset<3> (OR);
         
       } else if (funct == 0x27) {
         // set the ALUOP value to NOR
-        ALUOP = bitset<3> ("100");
+        ALUOP = bitset<3> (NOR);
       }
 
       // Execute: after decoding, ALU may run and return result
@@ -366,32 +366,32 @@ int main()
       immediate = bitset<16> (Instruction.to_string().substr(16, 16));
 
       // Extend the immediate
-        string immediateString = immediate.to_string();
+      string immediateString = immediate.to_string();
 
-        // check if MSB of immediate is 0 or 1
-        if (immediateString[0] == 0) {
-          // add 16 0s before the immediate
-          immediateString = "0000000000000000" + immediateString;
+      // check if MSB of immediate is 0 or 1
+      if (immediateString[0] == '0') {
+        // add 16 0s before the immediate
+        immediateString = "0000000000000000" + immediateString;
 
-        } else {
-          // add 16 1s before the immediate
-          immediateString = "1111111111111111" + immediateString;
-        }
+      } else {
+        // add 16 1s before the immediate
+        immediateString = "1111111111111111" + immediateString;
+      }
 
-        bitset<32> signExtendedImmediate = bitset<32>(immediateString);
+      bitset<32> signExtendedImmediate = bitset<32>(immediateString);
 
-        // decode instruction
-        myRF.ReadWrite(rs, rt, bitset<5>(0), bitset<32>(0), bitset<1>(0));
+      // decode instruction
+      myRF.ReadWrite(rs, rt, bitset<5>(0), bitset<32>(0), bitset<1>(0));
 
       if (opCode == 0x09) { // addiu
         // Set ALUOP
-        ALUOP = bitset<3> ("000");
+        ALUOP = bitset<3> (ADDU);
 
         // Execute: after decoding, ALU may run and return result
         ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, signExtendedImmediate);
 
         // Write back to RF: some operations may write things to RF
-        myRF.ReadWrite(rs, rt, rt, ALUReturnValue, bitset<1>(1));
+        myRF.ReadWrite(rs,  bitset<5>(0), rt, ALUReturnValue, bitset<1>(1));
 
         // Update PC
         PC = bitset<32>(PC.to_ulong() + 4); 
@@ -399,7 +399,7 @@ int main()
       } else if (opCode == 0x04) { // beq
 
         // Set ALUOP
-        ALUOP = bitset<3> ("001");
+        ALUOP = bitset<3> (SUBU);
 
          // Execute: after decoding, ALU may run and return result
         ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, myRF.ReadData2);
@@ -417,10 +417,13 @@ int main()
       } else if (opCode == 0x23) { // lw instruction
 
         // Set ALUOP
-        ALUOP = bitset<3> ("000"); // ADDU
+        ALUOP = bitset<3> (ADDU); // ADDU
 
         // Execute: after decoding, ALU may run and return result
-        ALUReturnValue = myALU.ALUOperation(ALUOP, signExtendedImmediate, myRF.ReadData1);
+        ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, signExtendedImmediate);
+
+        //memory address
+        cout << "mem address: " << ALUReturnValue << endl;
 
         // Read/Write Mem: access data memory (myDataMem)
         bitset<32> dataMemValue = myDataMem.MemoryAccess(ALUReturnValue, bitset<32>(0), bitset<1>(1), bitset<1>(0));
@@ -433,7 +436,7 @@ int main()
       } else if (opCode == 0x2B) { // sw instruction
 
         // Set ALUOP
-        ALUOP = bitset<3> ("000"); // ADDU
+        ALUOP = bitset<3> (ADDU); // ADDU
 
         // Execute: after decoding, ALU may run and return result
         ALUReturnValue = myALU.ALUOperation(ALUOP, signExtendedImmediate, myRF.ReadData1);
