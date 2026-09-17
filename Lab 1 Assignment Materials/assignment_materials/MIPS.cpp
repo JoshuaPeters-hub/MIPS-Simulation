@@ -97,6 +97,8 @@ class ALU
       else if (ALUOP==NOR){
         ans=~(oprand1.to_ulong()|oprand2.to_ulong());
       }
+
+      ALUresult = bitset<32> (ans);
       return ALUresult;
     }            
 };
@@ -290,10 +292,99 @@ int main()
   while (1)  // TODO: implement!
   {
     // Fetch: fetch an instruction from myInsMem.
+    bitset<32> Instruction = myInsMem.ReadMemory(PC);
 
     // If current instruction is "11111111111111111111111111111111", then break; (exit the while loop)
+    if (Instruction.to_string() == "11111111111111111111111111111111"){
+      break;
+    }
 
     // decode(Read RF): get opcode and other signals from instruction, decode instruction
+    // opCode
+    int opCode = stoi(Instruction.to_string().substr(0, 6), nullptr, 2);
+
+    // other signals
+    int funct;
+    bitset<5> rs, rt, rd, shamt;
+    bitset<16> immediate;
+    bitset<26> address;
+    bitset<3> ALUOP;
+    bitset<32> ALUReturnValue;
+
+    // checks if opcode is R-type and get all signals
+    if (opCode == 0x00) {
+
+      // get values for other signals
+      rs = bitset<5> (Instruction.to_string().substr(6, 5));
+      rt = bitset<5> (Instruction.to_string().substr(11, 5));
+      rd = bitset<5> (Instruction.to_string().substr(16, 5));
+      shamt = bitset<5> (Instruction.to_string().substr(21, 5));
+
+      // get the funct
+      funct = stoi(Instruction.to_string().substr(26, 6), nullptr, 2);
+
+      // decode the signals
+      myRF.ReadWrite(rs, rt, bitset<5> (0), bitset<32> (0), bitset<1> (0));
+
+      // check for specific instruction
+      if (funct == 0x21) {
+        // set the ALUOP value to ADDU
+        ALUOP = bitset<3> ("000");
+
+      } else if (funct == 0x23) {
+        // set the ALUOP value to SUBU
+        ALUOP = bitset<3> ("001");
+
+      } else if (funct == 0x24) {
+        // set the ALUOP value to AND
+        ALUOP = bitset<3> ("010");
+
+      } else if (funct == 0x25) {
+        // set the ALUOP value to OR
+        ALUOP = bitset<3> ("011");
+        
+      } else if (funct == 0x27) {
+        // set the ALUOP value to NOR
+        ALUOP = bitset<3> ("100");
+      }
+
+      // Execute: after decoding, ALU may run and return result
+      ALUReturnValue =
+          myALU.ALUOperation(ALUOP, myRF.ReadData1, myRF.ReadData2);
+
+      // Write back to RF: some operations may write things to RF
+      myRF.ReadWrite(rs, rt, rd, ALUReturnValue, bitset<1>(1));
+
+      // Update PC
+      PC = bitset<32>(PC.to_ulong() + 4);
+
+    } else if (opCode == 0x09 || opCode == 0x04 || opCode == 0x23 || opCode == 0x2B) { // for I-type instructions
+
+      // decode(Read RF): get opcode and other signals from instruction, decode instruction
+      rs = bitset<5> (Instruction.to_string().substr(6, 5));
+      rt = bitset<5> (Instruction.to_string().substr(11, 5));
+      immediate = bitset<16> (Instruction.to_string().substr(16, 16));
+
+      if (opCode == 0x09) {
+        // decode instruction
+        myRF.ReadWrite(rs, rt, bitset<5>(0), bitset<32>(0), bitset<1>(0));
+
+        // Set ALUOP
+        ALUOP = bitset<3> ("000");
+
+        // Extend the immediate
+
+
+        // Execute: after decoding, ALU may run and return result
+        ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, immediate)
+      }
+
+     
+
+
+
+
+    }
 
     // Execute: after decoding, ALU may run and return result
 
