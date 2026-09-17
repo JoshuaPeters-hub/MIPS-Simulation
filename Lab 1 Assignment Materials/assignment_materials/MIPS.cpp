@@ -312,7 +312,7 @@ int main()
     bitset<32> ALUReturnValue;
 
     // checks if opcode is R-type and get all signals
-    if (opCode == 0x00) {
+    if (opCode == 0x00) { // R-type
 
       // get values for other signals
       rs = bitset<5> (Instruction.to_string().substr(6, 5));
