@@ -312,7 +312,7 @@ int main()
     bitset<32> ALUReturnValue;
 
     // checks if opcode is R-type and get all signals
-    if (opCode == 0x00) { // R-type instructions
+    if (opCode == 0x00) {
 
       // get values for other signals
       rs = bitset<5> (Instruction.to_string().substr(6, 5));
@@ -323,12 +323,8 @@ int main()
       // get the funct
       funct = stoi(Instruction.to_string().substr(26, 6), nullptr, 2);
 
-      cout << funct << endl;
-
       // decode the signals
       myRF.ReadWrite(rs, rt, bitset<5> (0), bitset<32> (0), bitset<1> (0));
-
-      cout << "R-type" << endl;
 
       // check for specific instruction
       if (funct == 0x21) {
@@ -369,13 +365,11 @@ int main()
       rt = bitset<5> (Instruction.to_string().substr(11, 5));
       immediate = bitset<16> (Instruction.to_string().substr(16, 16));
 
-       cout << opCode << endl;
-
       // Extend the immediate
         string immediateString = immediate.to_string();
 
         // check if MSB of immediate is 0 or 1
-        if (immediateString[0] == 0) {
+        if (immediateString[0] = 0) {
           // add 16 0s before the immediate
           immediateString = "0000000000000000" + immediateString;
 
@@ -385,7 +379,7 @@ int main()
 
         }
 
-        bitset<32> signExtendedImmediate = bitset<32>(immediateString);
+        bitset signExtendedImmediate = bitset<32> (immediateString);
 
         // decode instruction
         myRF.ReadWrite(rs, rt, bitset<5>(0), bitset<32>(0), bitset<1>(0));
@@ -433,7 +427,7 @@ int main()
         bitset<32> dataMemValue = myDataMem.MemoryAccess(ALUReturnValue, bitset<32>(0), bitset<1>(1), bitset<1>(0));
 
         // Write back to RF: some operations may write things to RF
-        myRF.ReadWrite(rs, bitset<5> (0), rt, dataMemValue, bitset<1>(1));
+        myRF.ReadWrite(rs, rt, rt, dataMemValue, bitset<1>(1));
 
         // Update PC
         PC = bitset<32>(PC.to_ulong() + 4);
@@ -451,16 +445,8 @@ int main()
         // Update PC
         PC = bitset<32>(PC.to_ulong() + 4);
       }
-    } else if (opCode == 0x02) {  // J-type J instruction
-      address = bitset<26>(Instruction.to_string().substr(6, 26));
-      bitset<32> pc = ((PC.to_ulong() + 4) && 0xF0000000) +
-                      (Instruction.to_ulong() & 0x3FFFFFF << 2);
-    } else if (opCode == 0x3F || opCode == 0xFFFFFFFF) {  // J-type halt instruction
-      cout << "halt" << endl;
-      break;
     }
-
-    cout << ALUOP << endl;
+    
 
     // Execute: after decoding, ALU may run and return result
 
