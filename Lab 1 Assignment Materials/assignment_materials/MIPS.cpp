@@ -323,8 +323,12 @@ int main()
       // get the funct
       funct = stoi(Instruction.to_string().substr(26, 6), nullptr, 2);
 
+      cout << funct << endl;
+
       // decode the signals
       myRF.ReadWrite(rs, rt, bitset<5> (0), bitset<32> (0), bitset<1> (0));
+
+      cout << "R-type" << endl;
 
       // check for specific instruction
       if (funct == 0x21) {
@@ -364,6 +368,8 @@ int main()
       rs = bitset<5> (Instruction.to_string().substr(6, 5));
       rt = bitset<5> (Instruction.to_string().substr(11, 5));
       immediate = bitset<16> (Instruction.to_string().substr(16, 16));
+
+       cout << opCode << endl;
 
       // Extend the immediate
         string immediateString = immediate.to_string();
@@ -427,7 +433,7 @@ int main()
         bitset<32> dataMemValue = myDataMem.MemoryAccess(ALUReturnValue, bitset<32>(0), bitset<1>(1), bitset<1>(0));
 
         // Write back to RF: some operations may write things to RF
-        myRF.ReadWrite(rs, rt, rt, dataMemValue, bitset<1>(1));
+        myRF.ReadWrite(rs, bitset<5> (0), rt, dataMemValue, bitset<1>(1));
 
         // Update PC
         PC = bitset<32>(PC.to_ulong() + 4);
@@ -453,6 +459,8 @@ int main()
       cout << "halt" << endl;
       break;
     }
+
+    cout << ALUOP << endl;
 
     // Execute: after decoding, ALU may run and return result
 
