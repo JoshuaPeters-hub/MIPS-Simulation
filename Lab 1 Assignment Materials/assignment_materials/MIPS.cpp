@@ -369,7 +369,7 @@ int main()
         string immediateString = immediate.to_string();
 
         // check if MSB of immediate is 0 or 1
-        if (immediateString[0] == 0) {
+        if (immediateString[0] == '0') {
           // add 16 0s before the immediate
           immediateString = "0000000000000000" + immediateString;
 
@@ -378,10 +378,10 @@ int main()
           immediateString = "1111111111111111" + immediateString;
         }
 
-        bitset<32> signExtendedImmediate = bitset<32>(immediateString);
-
+        bitset<32> signExtendedImmediate (immediateString);
+          bitset<5> WriteReg=rt;
         // decode instruction
-        myRF.ReadWrite(rs, rt, bitset<5>(0), bitset<32>(0), bitset<1>(0));
+        myRF.ReadWrite(rs, rt, WriteReg, bitset<32>(0), bitset<1>(0));
 
       if (opCode == 0x09) { // addiu
         // Set ALUOP
@@ -391,7 +391,7 @@ int main()
         ALUReturnValue = myALU.ALUOperation(ALUOP, myRF.ReadData1, signExtendedImmediate);
 
         // Write back to RF: some operations may write things to RF
-        myRF.ReadWrite(rs, rt, rt, ALUReturnValue, bitset<1>(1));
+        myRF.ReadWrite(rs, rt, WriteReg, ALUReturnValue, bitset<1>(1));
 
         // Update PC
         PC = bitset<32>(PC.to_ulong() + 4); 
