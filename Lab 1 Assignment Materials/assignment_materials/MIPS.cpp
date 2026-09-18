@@ -447,11 +447,17 @@ int main()
         // Update PC
         PC = bitset<32>(PC.to_ulong() + 4);
       }
+    } else if (opCode == 0x02) {  // J-type J instruction
+      address = bitset<26>(Instruction.to_string().substr(6, 26));
+      bitset<32> pc = ((PC.to_ulong() + 4) && 0xF0000000) +
+                      (Instruction.to_ulong() & 0x3FFFFFF << 2);
+    } else if (opCode == 0x3F ||
+               opCode == 0xFFFFFFFF) {  // J-type halt instruction
+      cout << "halt" << endl;
+      break;
     }
-    
 
-
-    
+    cout << ALUOP << endl;
 
     // Execute: after decoding, ALU may run and return result
 
